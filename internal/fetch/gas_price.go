@@ -24,7 +24,7 @@ func (m *MockGasPriceFetcher) FetchLatestPrice() (*GasPriceData, error) {
 	log.Println("🧪 モックデータを使用してガソリン価格を取得")
 	return &GasPriceData{
 		Date:         now,
-		RegularPrice: 168.5,
+		RegularPrice: 180,
 		PremiumPrice: 179.2,
 		DieselPrice:  148.8,
 		Region:       "全国平均",

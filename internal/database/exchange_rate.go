@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"log"
 
-	"gasinsight/internal/models"
+	model "gasinsight/internal/model"
 )
 
 // CreateExchangeRateTable 為替レートテーブルを作成
@@ -34,7 +34,7 @@ func (s *SQLiteClient) CreateExchangeRateTable() error {
 }
 
 // SaveExchangeRate 為替レートを保存
-func (s *SQLiteClient) SaveExchangeRate(rate *models.ExchangeRate) error {
+func (s *SQLiteClient) SaveExchangeRate(rate *model.ExchangeRate) error {
 	query := `
 		INSERT OR REPLACE INTO exchange_rates 
 		(id, date, usd_jpy, eur_jpy, gbp_jpy, cny_jpy, source, created_at, updated_at)
@@ -61,7 +61,7 @@ func (s *SQLiteClient) SaveExchangeRate(rate *models.ExchangeRate) error {
 }
 
 // GetAllExchangeRates 全ての為替レートを取得
-func (s *SQLiteClient) GetAllExchangeRates() ([]*models.ExchangeRate, error) {
+func (s *SQLiteClient) GetAllExchangeRates() ([]*model.ExchangeRate, error) {
 	query := `
 		SELECT id, date, usd_jpy, eur_jpy, gbp_jpy, cny_jpy, source, created_at, updated_at
 		FROM exchange_rates
@@ -73,9 +73,9 @@ func (s *SQLiteClient) GetAllExchangeRates() ([]*models.ExchangeRate, error) {
 	}
 	defer rows.Close()
 
-	var rates []*models.ExchangeRate
+	var rates []*model.ExchangeRate
 	for rows.Next() {
-		var rate models.ExchangeRate
+		var rate model.ExchangeRate
 		err := rows.Scan(
 			&rate.ID,
 			&rate.Date,
@@ -97,14 +97,14 @@ func (s *SQLiteClient) GetAllExchangeRates() ([]*models.ExchangeRate, error) {
 }
 
 // GetLatestExchangeRate 最新の為替レートを取得
-func (s *SQLiteClient) GetLatestExchangeRate() (*models.ExchangeRate, error) {
+func (s *SQLiteClient) GetLatestExchangeRate() (*model.ExchangeRate, error) {
 	query := `
 		SELECT id, date, usd_jpy, eur_jpy, gbp_jpy, cny_jpy, source, created_at, updated_at
 		FROM exchange_rates
 		ORDER BY date DESC
 		LIMIT 1`
 
-	var rate models.ExchangeRate
+	var rate model.ExchangeRate
 	err := s.db.QueryRow(query).Scan(
 		&rate.ID,
 		&rate.Date,
@@ -128,13 +128,13 @@ func (s *SQLiteClient) GetLatestExchangeRate() (*models.ExchangeRate, error) {
 }
 
 // GetExchangeRateByDate 特定日付の為替レートを取得
-func (s *SQLiteClient) GetExchangeRateByDate(date string) (*models.ExchangeRate, error) {
+func (s *SQLiteClient) GetExchangeRateByDate(date string) (*model.ExchangeRate, error) {
 	query := `
 		SELECT id, date, usd_jpy, eur_jpy, gbp_jpy, cny_jpy, source, created_at, updated_at
 		FROM exchange_rates
 		WHERE date = ?`
 
-	var rate models.ExchangeRate
+	var rate model.ExchangeRate
 	err := s.db.QueryRow(query, date).Scan(
 		&rate.ID,
 		&rate.Date,

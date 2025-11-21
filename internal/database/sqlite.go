@@ -3,16 +3,34 @@ package database
 import (
 	"database/sql"
 	"fmt"
+	"gasinsight/internal/detect"
+	models "gasinsight/internal/model"
 	"log"
 	"os"
 	"path/filepath"
+	"time"
 
+	"github.com/google/uuid"
 	_ "github.com/mattn/go-sqlite3"
-	"gasinsight/internal/models"
 )
 
 type SQLiteClient struct {
 	db *sql.DB
+}
+
+func (c *SQLiteClient) Exec(query string, args ...interface{}) (sql.Result, error) {
+	return c.db.Exec(query, args...)
+}
+
+func (db *SQLiteClient) SaveNews(news *detect.AnalyzedNews) error {
+	now := time.Now().Unix()
+	id := uuid.New().String()
+	_, err := db.Exec(`
+        INSERT INTO news_summaries (id, date, title, summary, sentiment, url, created_at, updated_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+		id, news.Date, news.Title, news.Summary, news.Sentiment, news.URL, now, now,
+	)
+	return err
 }
 
 func NewSQLiteClient(dbPath string) (*SQLiteClient, error) {
@@ -60,6 +78,22 @@ func (s *SQLiteClient) createTables() error {
 	// 為替レートテーブルを作成
 	if err := s.CreateExchangeRateTable(); err != nil {
 		return err
+	}
+
+	// ニューステーブルを作成
+	newsQuery := `CREATE TABLE IF NOT EXISTS news_summaries (
+		id TEXT PRIMARY KEY,
+		date TEXT NOT NULL,
+		title TEXT NOT NULL,
+		summary TEXT NOT NULL,
+		sentiment TEXT NOT NULL,
+		url TEXT NOT NULL,
+		created_at INTEGER NOT NULL,
+		updated_at INTEGER NOT NULL
+	);`
+
+	if _, err := s.db.Exec(newsQuery); err != nil {
+		return fmt.Errorf("ニューステーブル作成エラー: %w", err)
 	}
 
 	log.Println("✅ 全テーブルを作成しました")
@@ -141,4 +175,54 @@ func (s *SQLiteClient) GetGasPriceByDate(date string) (*models.GasPrice, error) 
 		return nil, fmt.Errorf("指定日付のデータが見つかりません: %s", date)
 	}
 	return &p, err
+}
+
+// GetAllNews 全ニュースを取得
+func (s *SQLiteClient) GetAllNews() ([]*detect.AnalyzedNews, error) {
+	query := `SELECT id, date, title, summary, sentiment, url, created_at, updated_at 
+		FROM news_summaries ORDER BY created_at DESC`
+
+	rows, err := s.db.Query(query)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var newsList []*detect.AnalyzedNews
+	for rows.Next() {
+		var n detect.AnalyzedNews
+		var id string
+		var createdAt, updatedAt int64
+		if err := rows.Scan(&id, &n.Date, &n.Title, &n.Summary, &n.Sentiment, &n.URL, &createdAt, &updatedAt); err != nil {
+			return nil, err
+		}
+		newsList = append(newsList, &n)
+	}
+
+	return newsList, nil
+}
+
+// GetLatestNews 最新ニュースを取得
+func (s *SQLiteClient) GetLatestNews(limit int) ([]*detect.AnalyzedNews, error) {
+	query := `SELECT id, date, title, summary, sentiment, url, created_at, updated_at 
+		FROM news_summaries ORDER BY created_at DESC LIMIT ?`
+
+	rows, err := s.db.Query(query, limit)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var newsList []*detect.AnalyzedNews
+	for rows.Next() {
+		var n detect.AnalyzedNews
+		var id string
+		var createdAt, updatedAt int64
+		if err := rows.Scan(&id, &n.Date, &n.Title, &n.Summary, &n.Sentiment, &n.URL, &createdAt, &updatedAt); err != nil {
+			return nil, err
+		}
+		newsList = append(newsList, &n)
+	}
+
+	return newsList, nil
 }

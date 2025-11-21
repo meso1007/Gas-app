@@ -7,7 +7,7 @@ import (
 	"strings"
 	"time"
 
-	"gasinsight/internal/fetcher"
+	fetcher "gasinsight/internal/fetch"
 
 	"golang.org/x/net/html"
 )

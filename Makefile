@@ -1,4 +1,4 @@
-.PHONY: deps fetch fetch-scrape fetch-exchange fetch-all list list-exchange latest latest-exchange clean-db
+.PHONY: deps fetch fetch-scrape fetch-exchange fetch-all list list-exchange latest latest-exchange fetch-news fetch-news-real list-news latest-news test-newsapi clean-db
 
 deps:
 	@echo "📦 依存パッケージをインストール中..."
@@ -38,6 +38,30 @@ latest-exchange:
 	@echo "💱 最新の為替レートを表示..."
 	go run cmd/local/main.go -mode=latest-exchange
 
+fetch-news:
+	@echo "📰 ニュースを取得・分析中..."
+	go run cmd/local/main.go -mode=fetch-news
+
+fetch-news-real:
+	@echo "📰 ニュースを取得・分析中（NewsAPI + モック分析）..."
+	go run cmd/local/main.go -mode=fetch-news -mock=false
+
+fetch-news-gemini:
+	@echo "📰 ニュースを取得・分析中（NewsAPI + Gemini分析）..."
+	go run cmd/local/main.go -mode=fetch-news -mock=false -mock-analysis=false
+
+list-news:
+	@echo "📰 ニュース一覧を表示..."
+	go run cmd/local/main.go -mode=list-news
+
+latest-news:
+	@echo "📰 最新ニュースを表示..."
+	go run cmd/local/main.go -mode=latest-news
+
+analyze-fluctuation:
+	@echo "📉 価格変動分析を実行..."
+	go run cmd/local/main.go -mode=analyze-fluctuation
+
 clean-db:
 	@echo "🗑️  データベースを削除..."
 	rm -f data/gasinsight.db
@@ -50,8 +74,11 @@ help:
 	@echo "  make fetch-scrape    - ガソリン価格を取得（スクレイピング）"
 	@echo "  make fetch-exchange  - 為替レートを取得"
 	@echo "  make fetch-all       - 全データを取得"
+	@echo "  make fetch-news      - ニュースを取得・分析（Gemini）"
 	@echo "  make list            - ガソリン価格一覧"
 	@echo "  make list-exchange   - 為替レート一覧"
+	@echo "  make list-news       - ニュース一覧"
 	@echo "  make latest          - 最新ガソリン価格"
 	@echo "  make latest-exchange - 最新為替レート"
+	@echo "  make latest-news     - 最新ニュース"
 	@echo "  make clean-db        - データベースを削除"

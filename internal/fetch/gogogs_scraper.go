@@ -52,7 +52,7 @@ func (g *GogoGSScraper) Scrape(ctx context.Context) (*GasPriceData, error) {
 		RegularPrice: prices[0], // 最初がレギュラー
 		PremiumPrice: prices[1], // 2番目がハイオク
 		DieselPrice:  prices[2], // 3番目が軽油
-		Region:       "全国平均（gogo.gs）",
+		Region:       "全国平均",
 	}
 
 	log.Printf("✅ レギュラー: %.2f円", priceData.RegularPrice)
